@@ -12,11 +12,22 @@ body = ""
 
 
 def gen_body():
-    body = ""
+    body = """<!DOCTYPE html>
+            <html>
+            <head>
+            <meta charset="utf-8">
+            <title>Today</title>
+            </head>
+            <body>"""
     body = body + str(todayDate.main())
     body = body + "\n<hr>\n"
     body = body + str(metal.main())
     body = body + "\n<hr>\n"
+    body = (
+        body
+        + """</body>
+            </html>"""
+    )
     return body
 
 
