@@ -69,11 +69,12 @@ def main():
     log = log + "<p> <b>滕勇</b>   二月初七 " + birth(2, 7)
     log = log + "<p> <b>苏江庆</b>  新历 四月十 " + newbirth(4, 10)
     log = log + "<p> <b>苏江鹏</b>  五月十四 " + birth(5, 14)
-    log = log + "<p> <b>张若鹏</b>  新历 二月十三 " + newbirth(2, 13)
     log = log + "<p> <b>王亚君</b>  七月二十一 " + birth(7, 21)
+    log = log + "<p> <b>张若鹏</b>  新历 二月十三 " + newbirth(2, 13)
     log = log + "<p> <b>苏温昕</b>  八月二十三 " + birth(8, 23)
     log = log + "<p> <b>苏卓恩</b>  十月二十三 " + birth(10, 23)
     log = log + "<p> <b>苏元航</b>  二月二十 " + birth(2, 20)
+    log = log + "<p> <b>张辰玥</b>  新历 五月十八 " + birth(5, 18)
     return log
 
 
