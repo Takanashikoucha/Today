@@ -21,7 +21,7 @@ def gen_body():
             <body>"""
     body = body + str(todayDate.main())
     body = body + "\n<hr>\n"
-    body = body + str(metal.main())
+#    body = body + str(metal.main())
     body = body + "\n<hr>\n"
     body = (
         body
