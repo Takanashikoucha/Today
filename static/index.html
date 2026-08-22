@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Today · 家人生日 & 上海金价</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="topbar">
+    <div>
+      <h1 id="topbar-date">—</h1>
+      <p id="topbar-lunar" class="lunar-sub">—</p>
+    </div>
+    <div class="gold-today" id="gold-today">
+      <div class="gt-row1">
+        <span class="gt-label">沪金 Au99.99</span>
+        <span class="gt-live" id="gt-live" title="每10秒自动刷新"></span>
+      </div>
+      <div class="gt-row2">
+        <span class="gt-price" id="gt-price">加载中…</span>
+        <span class="gt-chg" id="gt-chg"></span>
+      </div>
+      <span class="gt-time" id="gt-time">—</span>
+    </div>
+  </header>
+
+  <!-- 1. 月历 -->
+  <section class="card">
+    <div class="cal-head">
+      <button class="nav" id="prev-year" title="上一年">«</button>
+      <button class="nav" id="prev-month" title="上一月">‹</button>
+      <h2 id="cal-title">—</h2>
+      <button class="nav" id="next-month" title="下一月">›</button>
+      <button class="nav" id="next-year" title="下一年">»</button>
+      <button class="today-btn" id="go-today">今天</button>
+    </div>
+    <div class="cal-week">
+      <span>日</span><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+    <div class="cal-legend">
+      <span class="lg"><i class="dot b"></i>农历生日</span>
+      <span class="lg"><i class="dot s"></i>公历生日</span>
+      <span class="lg"><i class="dot today"></i>今日</span>
+      <span class="lg"><b class="up">▲</b> 金涨 <b class="down">▼</b> 金跌</span>
+    </div>
+  </section>
+
+  <!-- 2. 金价折线图 -->
+  <section class="card">
+    <div class="sec-head">
+      <h3>近三个月金价走势 <span class="sec-sub" id="gold-range">—</span></h3>
+    </div>
+    <div class="chart-wrap">
+      <div id="chart"></div>
+      <div class="chart-tip" id="chart-tip" hidden></div>
+    </div>
+  </section>
+
+  <!-- 3. 生日倒计时 -->
+  <section class="card">
+    <div class="sec-head"><h3>家人生日倒计时</h3></div>
+    <div class="cd-list" id="cd-list"><div class="loading">加载中…</div></div>
+  </section>
+
+  <footer class="foot">
+    数据源：上海黄金交易所 (SGE) Au99.99 · 农历：lunar-javascript · 金价每 10 秒自动刷新
+  </footer>
+</div>
+
+<script src="/lunar.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>

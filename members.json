@@ -1,0 +1,26 @@
+{
+  "note": "家人生日配置。type: 'lunar'=农历生日, 'solar'=公历(新历)生日。新增家人/新生儿只需在数组里加一行，无需改代码。month/day 为对应历法下的月、日。",
+  "members": [
+    { "name": "苏天成", "type": "lunar", "month": 9,  "day": 21, "note": "" },
+    { "name": "林贞玉", "type": "lunar", "month": 12, "day": 11, "note": "" },
+    { "name": "陈春花", "type": "lunar", "month": 2,  "day": 6,  "note": "" },
+    { "name": "苏发金", "type": "lunar", "month": 8,  "day": 6,  "note": "" },
+    { "name": "苏金仙", "type": "lunar", "month": 2,  "day": 18, "note": "" },
+    { "name": "张学将", "type": "lunar", "month": 10, "day": 10, "note": "" },
+    { "name": "杨通慧", "type": "lunar", "month": 1,  "day": 22, "note": "" },
+    { "name": "苏发银", "type": "lunar", "month": 10, "day": 19, "note": "" },
+    { "name": "余燕",   "type": "lunar", "month": 8,  "day": 15, "note": "" },
+    { "name": "苏首峰", "type": "lunar", "month": 10, "day": 24, "note": "" },
+    { "name": "张若燕", "type": "solar", "month": 5,  "day": 3,  "note": "新历" },
+    { "name": "张建",   "type": "lunar", "month": 8,  "day": 29, "note": "" },
+    { "name": "滕勇",   "type": "lunar", "month": 2,  "day": 7,  "note": "" },
+    { "name": "苏江庆", "type": "solar", "month": 4,  "day": 10, "note": "新历" },
+    { "name": "苏江鹏", "type": "lunar", "month": 5,  "day": 14, "note": "" },
+    { "name": "王亚君", "type": "lunar", "month": 7,  "day": 21, "note": "" },
+    { "name": "张若鹏", "type": "solar", "month": 2,  "day": 13, "note": "新历" },
+    { "name": "苏温昕", "type": "lunar", "month": 8,  "day": 23, "note": "" },
+    { "name": "苏卓恩", "type": "lunar", "month": 10, "day": 23, "note": "" },
+    { "name": "苏元航", "type": "lunar", "month": 2,  "day": 20, "note": "" },
+    { "name": "张辰玥", "type": "solar", "month": 5,  "day": 18, "note": "新历" }
+  ]
+}
