@@ -21,6 +21,8 @@
     { "name": "苏温昕", "type": "lunar", "month": 8,  "day": 23, "note": "" },
     { "name": "苏卓恩", "type": "lunar", "month": 10, "day": 23, "note": "" },
     { "name": "苏元航", "type": "lunar", "month": 2,  "day": 20, "note": "" },
-    { "name": "张辰玥", "type": "solar", "month": 5,  "day": 18, "note": "新历" }
+    { "name": "张辰玥", "type": "solar", "month": 5,  "day": 18, "note": "新历" },
+    { "name": "张宸逸", "type": "solar", "month": 4,  "day": 23, "note": "新历" },
+    { "name": "张跃霖", "type": "solar", "month": 8,  "day": 7, "note": "新历" }
   ]
 }
