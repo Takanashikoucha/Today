@@ -4,12 +4,14 @@ Today —— 每日家人生日 + 上海金价 一屏看板。
 
 - GET /            渲染前端页面(静态)
 - GET /lunar.js    提供农历计算库(本地文件)
-- GET /api/gold    金价数据(历史3个月+今天, 每次刷新刷新当天)
-- GET /api/members 家人配置
+- GET /api/gold      金价数据(历史3个月+今天, 每次刷新刷新当天)
+- GET /api/gold-live 当天实时金价(新浪 XAU 折算, 盘中实时, 10s 轮询)
+- GET /api/members   家人配置
 """
 import os
 import json
 import logging
+import datetime as dt
 
 from fastapi import FastAPI
 from fastapi.responses import FileResponse, JSONResponse
@@ -67,6 +69,38 @@ def api_gold():
             "data": items,
         }
     )
+
+
+@app.get("/api/gold-live")
+def api_gold_live():
+    """当天实时金价(新浪现货黄金 XAU 折算元/克)。
+
+    盘中 SGE 官网不发布当日数据, 此接口提供实时估算价;
+    新浪无数据(休市/抓取失败)时返回 source=fallback, 前端回退官方收盘。
+    """
+    live = gold.get_live()
+    if live:
+        return JSONResponse(live)
+    # 回退: 用 SGE 官方最新一天(上一交易日)收盘价
+    try:
+        cache = gold.refresh_today()
+        items = sorted(cache.values(), key=lambda x: x["date"])
+        if items:
+            last = items[-1]
+            return JSONResponse(
+                {
+                    "date": last["date"],
+                    "source": "fallback",
+                    "price": last["close"],
+                    "prev_close": items[-2]["close"] if len(items) > 1 else None,
+                    "change": last.get("change"),
+                    "change_pct": last.get("change_pct"),
+                    "updated_at": dt.datetime.now().strftime("%H:%M:%S"),
+                }
+            )
+    except Exception as e:
+        log.warning("gold-live fallback failed: %s", e)
+    return JSONResponse({"source": "none"})
 
 
 @app.get("/api/members")

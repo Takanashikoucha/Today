@@ -266,32 +266,78 @@
     $("gold-range").textContent = `${first} ~ ${last} · ${n} 个交易日`;
   }
 
-  // ---------- 顶栏今日金价 ----------
-  function renderGoldToday() {
-    const el = goldArr[goldArr.length - 1];
-    if (!el) { $("gt-price").textContent = "—"; return; }
-    const up = (el.change || 0) >= 0;
-    $("gt-price").textContent = el.close + " 元/克";
-    const chg = $("gt-chg");
-    chg.textContent = `${up ? "▲" : "▼"} ${up ? "+" : ""}${el.change} (${up ? "+" : ""}${el.change_pct}%)`;
-    chg.style.color = up ? "var(--red)" : "var(--green)";
-    const t = $("gt-time");
-    if (t) t.textContent = `${el.date} 行情 · 更新于 ${new Date().toTimeString().slice(0, 8)}`;
+  // ---------- 顶栏今日金价(实时) ----------
+  function fmtUp(chg, pct) {
+    if (chg == null) return "—";
+    return `${chg > 0 ? "▲" : chg < 0 ? "▼" : "·"} ${chg > 0 ? "+" : ""}${chg}${pct != null ? ` (${chg > 0 ? "+" : ""}${pct}%)` : ""}`;
   }
 
-  // ---------- 每 10 秒自动刷新金价 ----------
+  function renderGoldToday(live) {
+    const priceEl = $("gt-price");
+    const chg = $("gt-chg");
+    const t = $("gt-time");
+    const liveEl = $("gt-live");
+    if (live && live.source === "live" && live.price != null) {
+      // 盘中实时价(新浪 XAU 折算)
+      const up = (live.change || 0) >= 0;
+      priceEl.textContent = live.price + " 元/克";
+      chg.textContent = fmtUp(live.change, live.change_pct);
+      chg.style.color = up ? "var(--red)" : "var(--green)";
+      liveEl.textContent = "实时";
+      liveEl.classList.add("on");
+      if (t) t.textContent = `实时估算 · 更新于 ${live.updated_at}`;
+    } else if (live && live.source === "fallback" && live.price != null) {
+      // 休市/抓取失败: 回退 SGE 官方最新收盘
+      const up = (live.change || 0) >= 0;
+      priceEl.textContent = live.price + " 元/克";
+      chg.textContent = fmtUp(live.change, live.change_pct);
+      chg.style.color = up ? "var(--red)" : "var(--green)";
+      liveEl.textContent = "官方收盘";
+      liveEl.classList.remove("on");
+      if (t) t.textContent = `${live.date} 官方收盘 · 更新于 ${live.updated_at}`;
+    } else if (goldArr.length) {
+      const el = goldArr[goldArr.length - 1];
+      const up = (el.change || 0) >= 0;
+      priceEl.textContent = el.close + " 元/克";
+      chg.textContent = fmtUp(el.change, el.change_pct);
+      chg.style.color = up ? "var(--red)" : "var(--green)";
+      liveEl.textContent = "";
+      liveEl.classList.remove("on");
+      if (t) t.textContent = `${el.date} 行情`;
+    } else {
+      priceEl.textContent = "—";
+      if (t) t.textContent = "—";
+    }
+  }
+
+  // ---------- 每 10 秒自动刷新实时金价 ----------
+  async function refreshGoldLive() {
+    let live = null;
+    try {
+      live = await fetch("/api/gold-live?_=" + Date.now(), { cache: "no-store" }).then((r) => r.json());
+    } catch (e) {
+      console.warn("gold-live fetch failed", e);
+    }
+    if (live && (live.source === "none" || live == null)) live = null;
+    renderGoldToday(live);
+  }
+
   async function refreshGold() {
+    // 1) 当天实时价(每 10s)
+    refreshGoldLive();
+    // 2) 历史数据: 只在当天数据缺失时补拉(收盘后官方数据出现)
     try {
       const gRes = await fetch("/api/gold?_=" + Date.now(), { cache: "no-store" }).then((r) => r.json());
       const data = gRes.data || [];
-      // 合并到本地缓存
+      const hadToday = !!gold[today.str];
       data.forEach((g) => (gold[g.date] = g));
       goldArr = data.slice().sort((a, b) => (a.date < b.date ? -1 : 1));
-      renderGoldToday();
-      renderChart();
-      renderCalendar();
+      // 折线图/月历仅在数据集合变化(如收盘后当天进入官方数据)时重绘
+      if (!hadToday && gold[today.str]) {
+        renderChart();
+        renderCalendar();
+      }
     } catch (e) {
-      // 静默失败, 下次再试
       console.warn("gold refresh failed", e);
     }
   }
@@ -388,6 +434,8 @@
       renderChart();
       renderGoldToday();
       renderCountdown();
+      // 顶栏实时价立刻取一次(不等 10s 定时器)
+      refreshGoldLive();
       // 启动 10 秒自动刷新
       setInterval(refreshGold, 10000);
     } catch (e) {
