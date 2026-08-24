@@ -200,15 +200,36 @@ body {
 .loading { color: var(--muted); grid-column: 1 / -1; padding: 24px; text-align: center; }
 .foot { color: var(--muted); font-size: 12px; text-align: center; padding: 22px 0 4px; opacity: .8; }
 
-/* ============ 响应式 ============ */
-@media (max-width: 600px) {
-  .cd-list { grid-template-columns: 1fr; }
-  .topbar { flex-direction: column; align-items: stretch; }
+/* ============ 响应式(手机) ============ */
+@media (max-width: 640px) {
+  .cd-list { grid-template-columns: 1fr; gap: 7px; }
+  .topbar { flex-direction: column; align-items: stretch; padding-bottom: 14px; }
   .gold-today { width: 100%; }
-  .cal-head h2 { min-width: 96px; font-size: 16px; }
-  .cell { min-height: 56px; border-radius: 9px; }
-  .cal-grid, .cal-week { gap: 4px; }
+  .cal-head h2 { min-width: 84px; font-size: 16px; margin-left: 2px; }
+  .nav, .today-btn { height: 32px; min-width: 34px; font-size: 14px; }
+  .cell { min-height: 44px; padding: 3px 3px; border-radius: 8px; }
+  .cal-grid, .cal-week { gap: 3px; }
+  .cal-week span { font-size: 10.5px; }
+  .cell .d { font-size: 12px; }
+  .cell .l { font-size: 9px; line-height: 1.2; }
+  .cell .gold {
+    font-size: 8.5px; gap: 2px;
+    flex-wrap: nowrap; overflow: hidden;
+  }
+  .cell .gold .p {
+    overflow: hidden; text-overflow: ellipsis;
+    flex: 0 1 auto; min-width: 0;
+  }
+  .cell .bday { font-size: 9px; margin-top: 2px; }
+  .cell .bday .nm { padding: 0 4px; font-size: 9px; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .cell .cake { font-size: 11px; }
+  .cal-legend { gap: 4px 10px; font-size: 11px; margin-top: 10px; }
   .card { border-radius: 14px; }
+  .cd-item { padding: 10px 12px; }
+  .cd-days { font-size: 19px; }
+  .gt-time { font-size: 10.5px; }
+  .foot { font-size: 11px; }
 }
 @media (max-width: 380px) {
   .cell .gold .p { display: none; }

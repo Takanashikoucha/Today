@@ -211,7 +211,7 @@ def get_live(today=None):
         "prev_close": 983.56,       # 昨收
         "change": 20.74,            # 涨跌额
         "change_pct": 2.11,         # 涨跌幅(%)
-        "updated_at": "14:49:00",   # 抓取时刻(本地)
+        "fetched_at": 1753344000,   # 抓取时刻(UTC 时间戳, 前端按用户本地时区显示)
       }
 
     带 LIVE_TTL 秒的文件缓存, 前端 10s 轮询时不会每个请求都打接口。
@@ -222,12 +222,8 @@ def get_live(today=None):
         cached = _load_live()
         if cached and cached.get("date") == today:
             try:
-                hms = cached["updated_at"].split(":")
-                ts = dt.datetime.combine(
-                    dt.date.today(),
-                    dt.time(int(hms[0]), int(hms[1]), int(hms[2])),
-                )
-                if (dt.datetime.now() - ts).total_seconds() <= LIVE_TTL:
+                age = time.time() - float(cached.get("fetched_at", 0))
+                if age <= LIVE_TTL:
                     return cached
             except Exception:
                 pass
@@ -275,7 +271,7 @@ def get_live(today=None):
                     "prev_close": prev_close,
                     "change": change,
                     "change_pct": change_pct,
-                    "updated_at": dt.datetime.now().strftime("%H:%M:%S"),
+                    "fetched_at": int(time.time()),
                 }
                 _save_live(item)
                 return item

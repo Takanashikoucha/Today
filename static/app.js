@@ -272,6 +272,19 @@
     return `${chg > 0 ? "▲" : chg < 0 ? "▼" : "·"} ${chg > 0 ? "+" : ""}${chg}${pct != null ? ` (${chg > 0 ? "+" : ""}${pct}%)` : ""}`;
   }
 
+  // 抓取时刻(UTC 时间戳) -> 用户本地时区的 HH:MM:SS
+  // 服务器不在中国, 不能用服务器时间, 一律按浏览器本地时间显示
+  function fmtLocal(ts) {
+    if (!ts) return "—";
+    try {
+      const d = new Date(ts * 1000);
+      const p = (n) => String(n).padStart(2, "0");
+      return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+    } catch (e) {
+      return "—";
+    }
+  }
+
   function renderGoldToday(live) {
     const priceEl = $("gt-price");
     const chg = $("gt-chg");
@@ -285,7 +298,7 @@
       chg.style.color = up ? "var(--red)" : "var(--green)";
       liveEl.textContent = "实时";
       liveEl.classList.add("on");
-      if (t) t.textContent = `实时估算 · 更新于 ${live.updated_at}`;
+      if (t) t.textContent = `实时 · 更新于 ${fmtLocal(live.fetched_at)}`;
     } else if (live && live.source === "fallback" && live.price != null) {
       // 休市/抓取失败: 回退 SGE 官方最新收盘
       const up = (live.change || 0) >= 0;
@@ -294,7 +307,7 @@
       chg.style.color = up ? "var(--red)" : "var(--green)";
       liveEl.textContent = "官方收盘";
       liveEl.classList.remove("on");
-      if (t) t.textContent = `${live.date} 官方收盘 · 更新于 ${live.updated_at}`;
+      if (t) t.textContent = `${live.date} 官方收盘 · 更新于 ${fmtLocal(live.fetched_at)}`;
     } else if (goldArr.length) {
       const el = goldArr[goldArr.length - 1];
       const up = (el.change || 0) >= 0;

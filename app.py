@@ -75,8 +75,8 @@ def api_gold():
 def api_gold_live():
     """当天实时金价(新浪现货黄金 XAU 折算元/克)。
 
-    盘中 SGE 官网不发布当日数据, 此接口提供实时估算价;
-    新浪无数据(休市/抓取失败)时返回 source=fallback, 前端回退官方收盘。
+    盘中 SGE 官网不发布当日数据, 此接口提供东方财富实时价;
+    无数据(休市/抓取失败)时返回 source=fallback, 前端回退官方收盘。
     """
     live = gold.get_live()
     if live:
@@ -95,7 +95,7 @@ def api_gold_live():
                     "prev_close": items[-2]["close"] if len(items) > 1 else None,
                     "change": last.get("change"),
                     "change_pct": last.get("change_pct"),
-                    "updated_at": dt.datetime.now().strftime("%H:%M:%S"),
+                    "fetched_at": int(dt.datetime.now().timestamp()),
                 }
             )
     except Exception as e:
