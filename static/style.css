@@ -166,7 +166,7 @@ body {
 /* ============ 折线图 ============ */
 .chart-wrap { position: relative; margin-top: 12px; }
 #chart { width: 100%; }
-#chart svg { width: 100%; height: auto; display: block; }
+#chart svg { width: 100%; height: auto; display: block; touch-action: manipulation; }
 .chart-tip {
   position: absolute; pointer-events: none; background: var(--card); color: var(--txt);
   border: 1px solid var(--line); border-radius: 10px; padding: 7px 10px;
@@ -206,7 +206,7 @@ body {
   .topbar { flex-direction: column; align-items: stretch; padding-bottom: 14px; }
   .gold-today { width: 100%; }
   .cal-head h2 { min-width: 84px; font-size: 16px; margin-left: 2px; }
-  .nav, .today-btn { height: 32px; min-width: 34px; font-size: 14px; }
+  .nav, .today-btn { height: 32px; min-width: 34px; font-size: 14px; touch-action: manipulation; }
   .cell { min-height: 44px; padding: 3px 3px; border-radius: 8px; }
   .cal-grid, .cal-week { gap: 3px; }
   .cal-week span { font-size: 10.5px; }

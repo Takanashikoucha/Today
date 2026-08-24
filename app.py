@@ -14,7 +14,7 @@ import logging
 import datetime as dt
 
 from fastapi import FastAPI
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 import gold
@@ -38,7 +38,28 @@ def _load_members():
 
 @app.get("/", include_in_schema=False)
 def index():
-    return FileResponse(os.path.join(STATIC_DIR, "index.html"))
+    # 给静态资源加内容 hash 版本号:
+    # CDN/浏览器会缓存 css/js 很久, 部署新代码后旧缓存会导致页面行为过期。
+    # 用文件 mtime 做版本号, 文件变了 URL 就变, 强制拉新资源。
+    import time as _time
+
+    def _ver(p):
+        try:
+            return str(int(os.path.getmtime(os.path.join(STATIC_DIR, p))))
+        except OSError:
+            return "0"
+
+    v = ",".join(
+        [
+            _ver("app.js"),
+            _ver("style.css"),
+            _ver(os.path.join("..", "lunar.js")),
+        ]
+    )
+    html = open(
+        os.path.join(STATIC_DIR, "index.html"), "r", encoding="utf-8"
+    ).read().replace("__STATIC_V__", v)
+    return HTMLResponse(html)
 
 
 @app.get("/lunar.js", include_in_schema=False)

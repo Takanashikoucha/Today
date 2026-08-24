@@ -274,10 +274,13 @@
 
   // 抓取时刻(UTC 时间戳) -> 用户本地时区的 HH:MM:SS
   // 服务器不在中国, 不能用服务器时间, 一律按浏览器本地时间显示
+  // 兼容旧版部署返回的 "HH:MM:SS" 字符串格式
   function fmtLocal(ts) {
-    if (!ts) return "—";
+    if (ts == null || ts === "") return "—";
+    if (typeof ts === "string" && /^\d{2}:\d{2}(:\d{2})?$/.test(ts)) return ts;
     try {
-      const d = new Date(ts * 1000);
+      const d = new Date(Number(ts) * 1000);
+      if (isNaN(d.getTime())) return "—";
       const p = (n) => String(n).padStart(2, "0");
       return `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
     } catch (e) {
@@ -298,7 +301,7 @@
       chg.style.color = up ? "var(--red)" : "var(--green)";
       liveEl.textContent = "实时";
       liveEl.classList.add("on");
-      if (t) t.textContent = `实时 · 更新于 ${fmtLocal(live.fetched_at)}`;
+      if (t) t.textContent = `实时 ${live.provider || ""} · 更新于 ${fmtLocal(live.fetched_at)}`;
     } else if (live && live.source === "fallback" && live.price != null) {
       // 休市/抓取失败: 回退 SGE 官方最新收盘
       const up = (live.change || 0) >= 0;
