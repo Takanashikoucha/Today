@@ -20,11 +20,12 @@
 
 ## 数据源
 
-- **实时金价（盘中，顶栏右上角）**：新浪现货黄金 XAU（伦敦金）实时价
-  `https://hq.sinajs.cn/list=hf_XAU`，按汇率 7.824 ÷ 31.1035 折算成元/克，
-  前端每 10 秒轮询 `/api/gold-live`（后端带 12s 缓存，避免重复抓取）。
-  涨跌相对昨日 SGE 官方收盘价计算；休市 / 抓取失败时自动回退显示
-  SGE 官方最新收盘（标注「官方收盘」）。
+- **实时金价（盘中，顶栏右上角）**：东方财富 SGE Au9999 实时行情
+  （即 `quote.eastmoney.com/globalfuture/AU9999.html` 页面的数据接口，
+  `push2.eastmoney.com/api/qt/stock/get?secid=118.AU9999`，主接口失败
+  自动回退 push2delay），前端每 10 秒轮询 `/api/gold-live`
+  （后端带 8s 缓存，每次轮询基本都取到新价）。
+  休市 / 抓取失败时自动回退显示 SGE 官方最新收盘（标注「官方收盘」）。
 - **历史金价 + 当日收盘（月历/折线图）**：上海黄金交易所官网单日行情
   `https://www.sge.com.cn/sjzx/quotation_daily_new?start_date=YYYY-MM-DD&end_date=YYYY-MM-DD`
   SGE 的范围查询超过 ~5 个交易日会只返回表头（已知缺陷），因此**按单日循环拉取**（6 并发，10 天约 0.4s）。

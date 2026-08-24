@@ -318,7 +318,8 @@
     } catch (e) {
       console.warn("gold-live fetch failed", e);
     }
-    if (live && (live.source === "none" || live == null)) live = null;
+    // live==null(网络失败)或 source==="none" 都回退到官方收盘显示
+    if (live && live.source === "none") live = null;
     renderGoldToday(live);
   }
 

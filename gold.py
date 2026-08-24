@@ -12,9 +12,10 @@ SGE 的范围查询超过约 5 个交易日会只返回表头(已知缺陷), 因
 
 实时价(盘中):
   SGE 官网只在收盘后发布当日行情, 白天无法取到当天数据。
-  因此盘中用新浪现货黄金 XAU(伦敦金)实时价 × 美元/人民币汇率 ÷ 7.824
-  折算成元/克, 作为当天行情的实时估算值(标注"实时"), 收盘后官方
-  日行情发布时自动以 SGE 官方收盘价为准。
+  因此盘中改用东方财富 SGE AU9999 实时行情接口
+  (quote.eastmoney.com/globalfuture/AU9999.html 的数据源, secid=118.AU9999),
+  提供当天最新的 SGE 合约价(元/克), 前端每 10 秒轮询; 休市/失败时
+  回退显示 SGE 官方最新收盘价。
 """
 import os
 import re
@@ -31,8 +32,7 @@ CACHE_FILE = os.path.join(BASE_DIR, "data", "gold.json")
 LIVE_FILE = os.path.join(BASE_DIR, "data", "gold_live.json")
 HISTORY_DAYS = 92  # 回溯自然日数, 约 3 个月
 SINGLE_WORKERS = 6  # 并发拉取 worker 数
-XAU_CNY = 7.824  # 美元/人民币 近似汇率(XAU 美元/盎司 -> 元/克)
-LIVE_TTL = 12  # 实时价缓存秒数(略大于前端 10s 轮询, 避免并发重复抓取)
+LIVE_TTL = 8  # 实时价缓存秒数(小于前端 10s 轮询, 每次轮询基本都拿到新价)
 UA = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0 Safari/537.36",
     "Referer": "https://www.sge.com.cn/",
@@ -43,9 +43,11 @@ _lock = threading.Lock()
 
 
 def _num(s):
-    """把 '983.56' / '-' / '1.59%' 之类的字符串转成 float, 失败返回 None。"""
+    """把 '983.56' / '-' / '1.59%' / 数字 之类的值转成 float, 失败返回 None。"""
     if s is None:
         return None
+    if isinstance(s, (int, float)):
+        return float(s)
     s = s.strip().replace("%", "").replace(",", "")
     if s in ("", "-", "--", "—"):
         return None
@@ -172,7 +174,7 @@ def refresh_today():
 
 
 # ---------------------------------------------------------------------------
-# 实时价(盘中): 新浪现货黄金 XAU -> 元/克
+# 实时价(盘中): 东方财富 SGE AU9999 实时行情(quote.eastmoney.com)
 # ---------------------------------------------------------------------------
 def _load_live():
     if os.path.exists(LIVE_FILE):
@@ -194,23 +196,26 @@ def _save_live(item):
 
 def get_live(today=None):
     """
-    获取当天实时金价(元/克)。
+    获取当天实时金价(元/克), 数据源: 东方财富 SGE AU9999 实时行情
+    (即 https://quote.eastmoney.com/globalfuture/AU9999.html 页面的数据接口)。
 
     返回 dict 或 None:
       {
         "date": "YYYY-MM-DD",      # 当天
-        "source": "live",           # 实时估算
-        "provider": "新浪现货黄金 XAU × 汇率 7.824",
-        "price": 983.56,            # 实时价(元/克)
-        "prev_close": 968.14,       # 上一交易日 SGE 官方收盘
-        "change": 15.42,            # price - prev_close (估算)
-        "change_pct": 1.59,
+        "source": "live",           # 实时
+        "provider": "东方财富 · 上海黄金交易所 Au9999",
+        "price": 1004.3,            # 最新价(元/克)
+        "open": 990.0,              # 今开
+        "high": 1006.6,             # 最高
+        "low": 985.0,               # 最低
+        "prev_close": 983.56,       # 昨收
+        "change": 20.74,            # 涨跌额
+        "change_pct": 2.11,         # 涨跌幅(%)
         "updated_at": "14:49:00",   # 抓取时刻(本地)
-        "xau": 4649.50,             # 原始 XAU 美元/盎司
       }
 
-    带 LIVE_TTL 秒的文件缓存, 前端 10s 轮询时不会每个请求都打新浪。
-    非交易日/休市时新浪无数据, 返回 None, 前端回退显示官方收盘。
+    带 LIVE_TTL 秒的文件缓存, 前端 10s 轮询时不会每个请求都打接口。
+    休市/无数据/抓取失败时返回 None, 前端回退显示 SGE 官方收盘。
     """
     today = today or dt.date.today().isoformat()
     with _lock:
@@ -227,47 +232,59 @@ def get_live(today=None):
             except Exception:
                 pass
 
-        r = requests.get(
-            "https://hq.sinajs.cn/list=hf_XAU",
-            headers={
-                "User-Agent": UA["User-Agent"],
-                "Referer": "https://finance.sina.com.cn/",
-            },
-            timeout=8,
-        )
-        m = re.search(r'var hq_str_hf_XAU="([^"]*)"', r.text)
-        if not m or not m.group(1):
-            return None
-        # 新浪 hf_XAU 实际字段(15个, 实测):
-        #  0 最新价($) 1 买价($) 2 卖价($) 3 今日开($) 4 今日高($)
-        #  5 今日低($) 6 更新时间 7 昨收($) 8 昨结算($) 9-11 0
-        # 12 交易日期 13 名称
-        f = m.group(1).split(",")
-        xau = _num(f[0])
-        if xau is None or xau <= 0:
-            return None
-        conv = XAU_CNY / 31.1035  # 美元/盎司 -> 元/克
-        price = round(xau * conv, 2)
-        prev_usd = _num(f[7])
-        prev_close = round(prev_usd * conv, 2) if prev_usd else None
-        chg = round(xau - prev_usd, 2) if prev_usd else None
-        chg_pct = round(chg / prev_usd * 100, 2) if prev_usd and chg is not None else None
-        item = {
-            "date": today,
-            "source": "live",
-            "provider": "新浪现货黄金 XAU × 汇率 %.3f" % XAU_CNY,
-            "price": price,
-            "open": round(_num(f[3]) * conv, 2) if _num(f[3]) else None,
-            "high": round(_num(f[4]) * conv, 2) if _num(f[4]) else None,
-            "low": round(_num(f[5]) * conv, 2) if _num(f[5]) else None,
-            "prev_close": prev_close,
-            "change": chg,
-            "change_pct": chg_pct,
-            "updated_at": dt.datetime.now().strftime("%H:%M:%S"),
-            "xau": xau,
-        }
-        _save_live(item)
-        return item
+        # push2 主接口失败时回退 push2delay 延迟接口
+        last_err = None
+        for host in ("push2delay.eastmoney.com", "push2.eastmoney.com"):
+            try:
+                r = requests.get(
+                    f"https://{host}/api/qt/stock/get",
+                    params={
+                        "secid": "118.AU9999",  # 118 = SGE(上海黄金交易所)
+                        "fields": "f43,f44,f45,f46,f57,f58,f60,f169,f170,f171",
+                        "invt": "2",
+                        "fltt": "2",
+                        "_": str(int(time.time() * 1000)),
+                    },
+                    headers={**UA, "Referer": "https://quote.eastmoney.com/"},
+                    timeout=8,
+                )
+                r.raise_for_status()
+                d = r.json().get("data")
+                if not d:
+                    return None
+                # f43 最新价 f44 最高 f45 最低 f46 今开 f58 名称
+                # f60 昨收 f169 涨跌额 f170 涨跌幅 f171 振幅
+                price = _num(d.get("f43"))
+                if price is None or price <= 0:
+                    return None
+                prev_close = _num(d.get("f60"))
+                change = _num(d.get("f169"))
+                change_pct = _num(d.get("f170"))
+                if change is None and prev_close:
+                    change = round(price - prev_close, 2)
+                if change_pct is None and prev_close and change is not None:
+                    change_pct = round(change / prev_close * 100, 2)
+                item = {
+                    "date": today,
+                    "source": "live",
+                    "provider": "东方财富 · 上海黄金交易所 Au9999",
+                    "price": price,
+                    "open": _num(d.get("f46")),
+                    "high": _num(d.get("f44")),
+                    "low": _num(d.get("f45")),
+                    "prev_close": prev_close,
+                    "change": change,
+                    "change_pct": change_pct,
+                    "updated_at": dt.datetime.now().strftime("%H:%M:%S"),
+                }
+                _save_live(item)
+                return item
+            except Exception as e:
+                last_err = e
+                log.warning("eastmoney %s failed: %s", host, e)
+        if last_err:
+            log.warning("all eastmoney live sources failed: %s", last_err)
+        return None
 
 
 if __name__ == "__main__":
