@@ -73,13 +73,14 @@ else
   echo "→ 远端为空仓库, 新建 $BRANCH。"
 fi
 
-# 5) 全量提交当前目录
+# 5) 全量提交当前目录 (提交信息可用 COMMIT_MSG 覆盖, 默认按时间生成)
+COMMIT_MSG="${COMMIT_MSG:-chore: update $(date +%F\ %H:%M) $(git diff --cached --stat | tail -1)}"
 git add -A
 if git diff --cached --quiet; then
   echo "→ 与远端一致, 无需提交。"
 else
-  git commit -q -m "feat: redesign Today - 月历+SGE金价+折线图+倒计时, 移除旧版 metal/todayDate"
-  echo "→ 已提交新结构。"
+  git commit -q -m "$COMMIT_MSG"
+  echo "→ 已提交: $COMMIT_MSG"
 fi
 
 # 6) 推送
